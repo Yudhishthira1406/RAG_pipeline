@@ -13,7 +13,7 @@ This repository demonstrates a complete Retrieval-Augmented Generation (RAG) pip
 | Component                        | Port  | Description                                                                          |
 |----------------------------------|-------|--------------------------------------------------------------------------------------|
 | **ChromaDB HTTP Service**        | 8000  | Vector store; run with `chroma run --path ./chroma_store`                           |
-| **Webhook Receiver (FastAPI)**   | 8080  | Receives Google Drive `changes.watch` notifications, downloads & re-indexes files    |
+| **Webhook Receiver (FastAPI)**   | 8080  | Receives Google Drive `changes.watch` notifications, downloads & re-indexes files. The re-indexes happen only for the modified sections of the file    |
 | **Query API (FastAPI)**          | 4000  | Accepts user queries, retrieves context from ChromaDB, and generates answers via LLM |
 
 ---
