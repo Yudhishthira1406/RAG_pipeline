@@ -1,5 +1,8 @@
 import os
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TOKEN_FILE = os.getenv("START_PAGE_TOKEN_PATH")
 

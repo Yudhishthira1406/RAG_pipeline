@@ -40,7 +40,7 @@ vectorstore = Chroma(
 # === BUILD RETRIEVER & RAG CHAIN ===
 retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
 
-llm = ChatOpenAI(model=OPENAI_MODEL, temperature=0.0, api_key="AIzaSyDkYfSTwyB-wfX8Q2oJUPCge9mUkAmrgvY", base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
+llm = ChatOpenAI(model=OPENAI_MODEL, temperature=0.0, api_key=os.getenv("OPENAI_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",

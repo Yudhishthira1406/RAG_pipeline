@@ -1,7 +1,10 @@
 import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-import json
+import json 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_KEY_PATH")
 FOLDER_ID = "1U2pISK1UZs6IAyDwBHV0bch7pSnbOJP9"
@@ -18,7 +21,7 @@ file_metadata = {
 }
 media = {
     "mimeType": "text/plain",
-    "body": "This is a test file content"
+    "body": "This is a test file content" * 1500
 }
 
 from googleapiclient.http import MediaInMemoryUpload

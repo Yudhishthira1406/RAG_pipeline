@@ -11,6 +11,10 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # === CONFIGURATION ===
 FOLDER_ID = "1MI6iLantDU4n4ZGwzuf-DBgT2ZUDLBnJ"
 DOWNLOAD_DIR = 'downloads'

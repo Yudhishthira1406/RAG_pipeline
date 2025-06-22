@@ -5,7 +5,9 @@ import logging
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from apps.utils.token_store import load_start_page_token, save_start_page_token
+from dotenv import load_dotenv
 
+load_dotenv()
 
 SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_KEY_PATH")
 SCOPES = ['https://www.googleapis.com/auth/drive']
