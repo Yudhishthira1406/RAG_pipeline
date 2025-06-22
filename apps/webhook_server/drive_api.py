@@ -1,7 +1,8 @@
-
-import os
 import io
+import json
 import pymupdf 
+import os
+import hashlib
 import chromadb
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
@@ -39,6 +40,19 @@ collection = client.get_or_create_collection(COLLECTION_NAME, embedding_function
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 
+MAPPING_FILE="chunk_hash_map.json"
+
+def load_map():
+    if os.path.exists(MAPPING_FILE):
+        return json.load(open(MAPPING_FILE))
+    return {}
+
+def save_map(m):
+    json.dump(m, open(MAPPING_FILE, "w"), indent=2)
+
+def sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
 # === HELPERS ===
 def list_pdfs_recursively(folder_id):
     """Recursively list all PDF files inside the folder and subfolders."""
@@ -72,18 +86,53 @@ def extract_text_from_pdf(path):
 def download_and_index_files(file_id, file_name):
     local_path = download_pdf(file_id, file_name)
 
-        # Extract and split
+    chunk_map = load_map().get(file_id, [])
+    old_hashes = {entry["chunk_id"]: entry["hash"] for entry in chunk_map}
+    # Extract and split
     full_text = extract_text_from_pdf(local_path)
     chunks = text_splitter.split_text(full_text)
 
-    metadatas = [{"file_name": file_name, "file_id": file_id}] * len(chunks)
-    ids = [f"{file_id}_chunk{i}" for i in range(len(chunks))]
+    new_map = []
+    to_add   = []
+    to_del   = []
+    
+    # 3. Compute hash per chunk and diff
+    for i, chunk in enumerate(chunks):
+        chunk_id = f"{file_id}_chunk{i}"
+        h        = sha256(chunk)
+        new_map.append({"chunk_id": chunk_id, "hash": h})
 
-    collection.add(
-        documents=chunks,
-        metadatas=metadatas,
-        ids=ids
-    )
+        if chunk_id not in old_hashes:
+            # brand new chunk
+            to_add.append((chunk_id, chunk))
+        elif old_hashes[chunk_id] != h:
+            # modified chunk
+            to_del.append(chunk_id)
+            to_add.append((chunk_id, chunk))
+        # else: unchanged → do nothing
+
+    # 4. Any old chunk_ids no longer in new_map should be deleted
+    new_ids = {e["chunk_id"] for e in new_map}
+    for old_id in old_hashes:
+        if old_id not in new_ids:
+            to_del.append(old_id)
+
+    # 5. Delete outdated chunks from ChromaDB
+    if to_del:
+        collection.delete(ids=to_del)
+
+    # 6. Add new/updated chunks
+    if to_add:
+        texts     = [c for _, c in to_add]
+        ids       = [i for i, _ in to_add]
+        metadatas = [{"file_id": file_id, "file_name": file_name}]*len(to_add)
+        collection.add(documents=texts,metadatas=metadatas, ids=ids)
+
+    full_map = load_map()
+    full_map[file_id] = new_map
+    save_map(full_map)
+
+    print(f"Reindexed {file_name}: +{len(to_add)} chunks, -{len(to_del)} chunks")
 
 # === MAIN INGESTION ===
 def ingest_pdfs_from_drive():
