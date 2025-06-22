@@ -107,8 +107,13 @@ This FastAPI app implements a /ask endpoint.
 ```
 curl -X POST http://localhost:4000/ask \
 -H "Content-Type: application/json" \
--d '{"query":"tell me about futures and options on the au stock exhcnage and give details","top_k":3}'
+-d '{"query":"tell me about futures and options on the au stock exchange and give details","top_k":3}'
 ```
+
+## Scope of Improvement
+1. Better parsing of files, e.g., differentiate between normal text, tables and graphs.
+2. Use plugin architecture for different AI agents.
+3. Give the endpoint for just the vector search as well as it might be more accurate in some cases.
    
 
 
